@@ -1,11 +1,12 @@
-import express from "express";
-import { config } from "dotenv";
-config();
-
-const app = express();
-
-//Middleware
-app.use(express.json());
+import app from "./app.js";
+import { connectToDatabase } from "./db/connection.js";
 
 //Connections and Listeners
-app.listen(5000, () => console.log("Server Open in Port 5000"));
+const PORT = process.env.PORT || 5000;
+connectToDatabase()
+  .then(() => {
+    app.listen(PORT, () =>
+      console.log("Server Open in Port 5000 and Connected to Database 📅")
+    );
+  })
+  .catch((err) => console.log(err));
