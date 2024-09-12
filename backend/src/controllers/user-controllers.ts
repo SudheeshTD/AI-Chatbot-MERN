@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { hash } from "bcrypt";
+import { hash, compare } from "bcrypt";
 import User from "../models/User.js";
 
 export const getAllUsers = async (
@@ -25,9 +25,34 @@ export const userSignup = async (
   try {
     //User Signup
     const { name, email, password } = req.body;
+    const existingUser = await User.findOne({ email });
+    if (existingUser) return res.status(401).send("User already Registered");
     const hashedPassword = await hash(password, 10);
     const user = new User({ name, email, password: hashedPassword });
     await user.save();
+    return res.status(201).json({ message: "Ok", id: user._id.toString() });
+  } catch (error) {
+    console.log(error);
+    return res.status(200).json({ message: "ERROR", cause: error.message });
+  }
+};
+
+export const userLogin = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    //User Signup
+    const { email, password } = req.body;
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(401).send("User not Registered");
+    }
+    const isPasswordCorrect = await compare(password, user.password);
+    if (!isPasswordCorrect) {
+      return res.status(403).send("Incorrect Password");
+    }
     return res.status(201).json({ message: "Ok", id: user._id.toString() });
   } catch (error) {
     console.log(error);
